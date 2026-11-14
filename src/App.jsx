@@ -1,51 +1,80 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+
+import LoginForm from "./LoginForm";
+import { auth, logout } from "./authService";
 
 function App() {
+  const [user, setUser] = useState(null);
   const [codename, setCodename] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const generateCodename = () => {
+  const adjectives = [
+    "Sneaky",
+    "Silent",
+    "Crazy",
+    "Fast",
+    "Happy"
+  ];
 
-  function generateCodename() {
-    const adjectives = ["Sneaky", "Happy", "Crazy", "Silent", "Mighty"];
-    const animals = ["Panda", "Fox", "Tiger", "Koala", "Otter"];
+  const animals = [
+    "Panda",
+    "Wolf",
+    "Tiger",
+    "Fox",
+    "Eagle"
+  ];
 
-    const adjective =
-      adjectives[Math.floor(Math.random() * adjectives.length)];
+  const adjective =
+    adjectives[Math.floor(Math.random() * adjectives.length)];
 
-    const animal =
-      animals[Math.floor(Math.random() * animals.length)];
+  const animal =
+    animals[Math.floor(Math.random() * animals.length)];
 
-    const number =
-      Math.floor(Math.random() * 100);
+  const number =
+    Math.floor(Math.random() * 100);
 
-    return `${adjective}${animal}${number}`;
-  }
+  return `${adjective}${animal}${number}`;
+};
 
-  function login() {
-    let cachedName = localStorage.getItem("codename");
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser) => {
+  setUser(firebaseUser);
 
-    if (!cachedName) {
-      cachedName = generateCodename();
-      localStorage.setItem("codename", cachedName);
+  if (firebaseUser) {
+    const key = `codename_${firebaseUser.uid}`;
+
+    let name = localStorage.getItem(key);
+
+    if (!name) {
+      name = generateCodename();
+
+      localStorage.setItem(key, name);
     }
 
-    setCodename(cachedName);
-    setLoggedIn(true);
+    setCodename(name);
   }
+}
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Koodinimigeneraattori</h1>
+    <div>
+      <h1>Firebase Login Demo</h1>
 
-      {!loggedIn ? (
-        <button onClick={login}>
-          Kirjaudu sisään
-        </button>
+      {user ? (
+        <>
+          <p>👋 Tervetuloa, {codename}</p>
+
+          <button onClick={logout}>
+            Kirjaudu ulos
+          </button>
+        </>
       ) : (
-        <div>
-          <h2>Tervetuloa!</h2>
-          <p>Sinun koodinimesi on:</p>
-          <h3>{codename}</h3>
-        </div>
+        <LoginForm />
       )}
     </div>
   );
