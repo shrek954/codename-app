@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 
 import QuizForm from "./components/QuizForm.jsx";
+import RoundResult from "./components/RoundResult.jsx";
 import { fetchRandomProduct } from "./ProductService.js";
 import LoginForm from "./LoginForm";
 import { auth, logout } from "./authService";
@@ -11,6 +12,7 @@ function App() {
   const [codename, setCodename] = useState("");
   const [guess, setGuess] = useState(null);
   const [product, setProduct] = useState(null);
+  const [round, setRound] = useState(1);
 
   const generateCodename = () => {
     const adjectives = [
@@ -78,6 +80,17 @@ function App() {
 
 }, []);
 
+  async function nextRound() {
+
+  const randomProduct =
+    await fetchRandomProduct();
+
+  setProduct(randomProduct);
+
+  setGuess(null);
+
+  setRound(round + 1);
+}
   return (
     <div>
       <h1>Firebase Login Demo</h1>
@@ -85,6 +98,7 @@ function App() {
       {user ? (
         <>
           <p>👋 Tervetuloa, {codename}</p>
+          <p>Kierros: {round}</p>
 
           <button onClick={logout}>
             Kirjaudu ulos
@@ -107,23 +121,11 @@ function App() {
 )}
 
           {guess && (
-  <>
-    <p>
-      Arvauksesi: {guess} €
-    </p>
-
-    <p>
-      Oikea hinta:
-      {product.price} €
-    </p>
-
-    <p>
-      Erotus:
-      {Math.abs(
-        guess - product.price
-      )} €
-    </p>
-  </>
+  <RoundResult
+    guess={guess}
+    correctPrice={product.price}
+    onNextRound={nextRound}
+  />
 )}
         </>
       ) : (
