@@ -4,6 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import QuizForm from "./components/QuizForm.jsx";
 import RoundResult from "./components/RoundResult.jsx";
 import { fetchRandomProduct } from "./ProductService.js";
+import { calculatePoints } from "./gameController.js";
 import LoginForm from "./LoginForm";
 import { auth, logout } from "./authService";
 
@@ -13,6 +14,7 @@ function App() {
   const [guess, setGuess] = useState(null);
   const [product, setProduct] = useState(null);
   const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
 
   const generateCodename = () => {
     const adjectives = [
@@ -79,8 +81,26 @@ function App() {
   loadProduct();
 
 }, []);
+useEffect(() => {
+  if (guess !== null && product) {
+    const points = calculatePoints(
+      guess,
+      product.price
+    );
 
-  async function nextRound() {
+    setScore((prev) => prev + points);
+  }
+}, [guess, product]);
+
+
+async function nextRound() {
+
+  if (round >= 3) {
+    alert(
+  `Peli päättyi! Kokonaispisteesi: ${Math.round(score)}`
+);
+    return;
+  }
 
   const randomProduct =
     await fetchRandomProduct();
@@ -99,6 +119,8 @@ function App() {
         <>
           <p>👋 Tervetuloa, {codename}</p>
           <p>Kierros: {round}</p>
+          <p>Pisteet: {Math.round(score)}</p>
+
 
           <button onClick={logout}>
             Kirjaudu ulos

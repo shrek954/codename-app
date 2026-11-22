@@ -19,7 +19,7 @@ function RoundResult({
         Erotus:
         {Math.abs(
           guess - correctPrice
-        )} €
+         ).toFixed(2)} €
       </p>
 
       <button
