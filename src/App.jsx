@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 
-import QuizForm from "./components/QuizForm";
+import QuizForm from "./components/QuizForm.jsx";
+import { fetchRandomProduct } from "./ProductService.js";
 import LoginForm from "./LoginForm";
 import { auth, logout } from "./authService";
 
@@ -9,6 +10,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [codename, setCodename] = useState("");
   const [guess, setGuess] = useState(null);
+  const [product, setProduct] = useState(null);
 
   const generateCodename = () => {
     const adjectives = [
@@ -63,6 +65,18 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+  useEffect(() => {
+  async function loadProduct() {
+
+    const randomProduct =
+      await fetchRandomProduct();
+
+    setProduct(randomProduct);
+  }
+
+  loadProduct();
+
+}, []);
 
   return (
     <div>
@@ -76,15 +90,41 @@ function App() {
             Kirjaudu ulos
           </button>
 
-          <QuizForm
-            onSubmitGuess={setGuess}
-          />
+          {product && (
+  <>
+    <h2>{product.title}</h2>
+
+    <img
+      src={product.thumbnail}
+      alt={product.title}
+      width="200"
+    />
+
+    <QuizForm
+      onSubmitGuess={setGuess}
+    />
+  </>
+)}
 
           {guess && (
-            <p>
-              Arvauksesi: {guess} €
-            </p>
-          )}
+  <>
+    <p>
+      Arvauksesi: {guess} €
+    </p>
+
+    <p>
+      Oikea hinta:
+      {product.price} €
+    </p>
+
+    <p>
+      Erotus:
+      {Math.abs(
+        guess - product.price
+      )} €
+    </p>
+  </>
+)}
         </>
       ) : (
         <LoginForm />
